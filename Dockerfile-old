@@ -1,0 +1,29 @@
+FROM debian:11-slim as build
+RUN set -xe \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y curl build-essential gcc make libssl-dev pkg-config
+RUN rm -f /etc/ssl/certs/ca-bundle.crt \
+    && apt reinstall -y ca-certificates
+# && update-ca-certificates    # update system CA certificates, NOT REQUIRED AS REINSTALL DOES IT
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN apt clean && rm -rf /var/lib/apt/lists/*
+
+FROM build as build-env
+COPY --from=build --chown=root:root /root/.cargo /root/.cargo
+COPY ./Cargo.toml /app/Cargo.toml
+COPY ./src /app/src
+WORKDIR /app
+RUN /root/.cargo/bin/cargo build --release
+RUN chown -R nobody:nogroup /app
+
+FROM gcr.io/distroless/static:latest as base
+# Copy binary files
+COPY --from=build-env /app/target/release/rados-list /app/rados-list
+# Setup working directory
+WORKDIR /app
+COPY ./.env /app/.env
+COPY ./status /app/status
+COPY ./bucketlists /app/bucketlists
+# Run the application
+USER nobody
+ENTRYPOINT ["/app/rados-list"]

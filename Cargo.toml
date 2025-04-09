@@ -1,0 +1,19 @@
+[package]
+name = "rados-list"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dotenv = "0.15.0"
+# rust-s3 = { path = "rust-s3" }
+rust-s3 = { version = "0.32.1" }
+serde_json = "1.0.82"
+tokio = { version="1.20.0", features = ["full"] }
+chrono = { version = "0.4", features = ["serde", "rustc-serialize"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1

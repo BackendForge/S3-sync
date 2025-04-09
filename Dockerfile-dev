@@ -1,0 +1,9 @@
+FROM rust:latest
+WORKDIR /app
+COPY ./src /app/src
+COPY ./Cargo.toml /app/Cargo.toml
+RUN cargo build --release
+RUN mv /app/target/release/rados-list /app/rados-list
+RUN rm -r /app/target
+COPY ./.env /app/.env
+ENTRYPOINT ["/app/rados-list"]
